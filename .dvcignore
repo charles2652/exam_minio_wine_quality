@@ -1,0 +1,10 @@
+# Fichiers système
+.DS_Store
+# Dossiers Git
+.git
+.gitignore
+# Dossiers DVC internes
+.dvc/tmp
+.dvc/cache
+# Logs
+*.log
