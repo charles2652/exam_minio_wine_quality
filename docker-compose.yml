@@ -1,0 +1,82 @@
+version: '3.3'
+
+services:
+  minio:
+    image: minio/minio:latest
+    container_name: minio_server
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    env_file: .env
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    # Garantit que MinIO est prêt à recevoir des connexions S3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: docker/mlflow/Dockerfile
+    container_name: mlflow_server
+    ports:
+      - "5000:5000"
+    env_file: .env
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+    depends_on:
+      minio:
+        condition: service_healthy
+    volumes:
+      - mlflow_data:/mlflow
+
+  pipeline:
+    build:
+      context: .
+      dockerfile: docker/pipeline/Dockerfile
+    container_name: wine_pipeline
+    env_file: .env
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      minio:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+    volumes:
+      - .:/app
+
+  tests:
+    build:
+      context: .
+      dockerfile: tests/Dockerfile
+    container_name: wine_tests
+    env_file: .env
+    environment:
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
+      - MINIO_MLFLOW_BUCKET=mlflow-artifacts
+      - MINIO_DATA_BUCKET=dvc-storage
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    depends_on:
+      minio:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+    volumes:
+      - ./tests:/app/tests
+      - ./src:/app/src
+
+volumes:
+  minio_data:
+  mlflow_data:

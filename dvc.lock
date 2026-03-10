@@ -1,0 +1,126 @@
+schema: '2.0'
+stages:
+  data_ingestion:
+    cmd: python src/pipeline/pipeline_steps/stage01_data_ingestion.py
+    deps:
+    - path: src/pipeline/config.yaml
+      hash: md5
+      md5: 6f3b6ae109aaacb645b0c22c3b91fd8f
+      size: 816
+    - path: src/pipeline/pipeline_steps/stage01_data_ingestion.py
+      hash: md5
+      md5: a40d4fbc7ae9e04d3609e3c6e7bd2909
+      size: 1121
+    outs:
+    - path: data/raw/winequality-red.csv
+      hash: md5
+      md5: 6a883fd98624e18c0b7ce251f4fab4fb
+      size: 100951
+  data_validation:
+    cmd: python src/pipeline/pipeline_steps/stage02_data_validation.py
+    deps:
+    - path: data/raw/winequality-red.csv
+      hash: md5
+      md5: 6a883fd98624e18c0b7ce251f4fab4fb
+      size: 100951
+    - path: src/pipeline/config.yaml
+      hash: md5
+      md5: 6f3b6ae109aaacb645b0c22c3b91fd8f
+      size: 816
+    - path: src/pipeline/pipeline_steps/stage02_data_validation.py
+      hash: md5
+      md5: fa4e6952c7bfa4848030e1e0bbfd0ebc
+      size: 1002
+    outs:
+    - path: data/status.txt
+      hash: md5
+      md5: 86e6a2f694c57a675b3e2da6b95ff9ba
+      size: 23
+  data_transformation:
+    cmd: python src/pipeline/pipeline_steps/stage03_data_transformation.py
+    deps:
+    - path: data/raw/winequality-red.csv
+      hash: md5
+      md5: 6a883fd98624e18c0b7ce251f4fab4fb
+      size: 100951
+    - path: data/status.txt
+      hash: md5
+      md5: 86e6a2f694c57a675b3e2da6b95ff9ba
+      size: 23
+    - path: src/pipeline/config.yaml
+      hash: md5
+      md5: 6f3b6ae109aaacb645b0c22c3b91fd8f
+      size: 816
+    - path: src/pipeline/pipeline_steps/stage03_data_transformation.py
+      hash: md5
+      md5: 74933a96d9caa00e468e2c501f0af8b9
+      size: 1391
+    outs:
+    - path: data/processed/X_test.csv
+      hash: md5
+      md5: 9ae87aeb78fbccba2b39e275486125d5
+      size: 18188
+    - path: data/processed/X_train.csv
+      hash: md5
+      md5: 8d0713cbe22ad72af5f863e9e32577e6
+      size: 72229
+    - path: data/processed/y_test.csv
+      hash: md5
+      md5: 52997ed677033cccf5874db23d054043
+      size: 648
+    - path: data/processed/y_train.csv
+      hash: md5
+      md5: 4040613523475448ce5a6170c18e383e
+      size: 2566
+  model_trainer:
+    cmd: python src/pipeline/pipeline_steps/stage04_model_trainer.py
+    deps:
+    - path: data/processed/X_train.csv
+      hash: md5
+      md5: 8d0713cbe22ad72af5f863e9e32577e6
+      size: 72229
+    - path: data/processed/y_train.csv
+      hash: md5
+      md5: 4040613523475448ce5a6170c18e383e
+      size: 2566
+    - path: src/pipeline/config.yaml
+      hash: md5
+      md5: 6f3b6ae109aaacb645b0c22c3b91fd8f
+      size: 816
+    - path: src/pipeline/pipeline_steps/stage04_model_trainer.py
+      hash: md5
+      md5: d9ea34fd99e44b4447bc8910b6a72dc3
+      size: 970
+    outs:
+    - path: models/model.joblib
+      hash: md5
+      md5: 02458ff4d80b19c924fe64484145ef95
+      size: 1183
+  model_evaluation:
+    cmd: python src/pipeline/pipeline_steps/stage05_model_evaluation.py
+    deps:
+    - path: data/processed/X_test.csv
+      hash: md5
+      md5: 9ae87aeb78fbccba2b39e275486125d5
+      size: 18188
+    - path: data/processed/y_test.csv
+      hash: md5
+      md5: 52997ed677033cccf5874db23d054043
+      size: 648
+    - path: models/model.joblib
+      hash: md5
+      md5: 02458ff4d80b19c924fe64484145ef95
+      size: 1183
+    - path: src/pipeline/config.yaml
+      hash: md5
+      md5: 6f3b6ae109aaacb645b0c22c3b91fd8f
+      size: 816
+    - path: src/pipeline/pipeline_steps/stage05_model_evaluation.py
+      hash: md5
+      md5: bd50c3253772aae9301b923ae49729df
+      size: 1014
+    outs:
+    - path: metrics/metrics.json
+      hash: md5
+      md5: 56bca8eb59121ad1e8515d0cb4692efc
+      size: 96
